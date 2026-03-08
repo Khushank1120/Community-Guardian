@@ -1,0 +1,26 @@
+.DS_Store
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build outputs
+out/
+build_out/
+*.class
+
+# IDE files
+.idea/
+*.iml
+
+# Runtime/generated data (keep sample dataset versioned)
+data/incidents_db.csv
+data/incidents_db.csv.sig
+data/users.csv
+data/users.csv.sig
+data/circle_members.csv
+data/circle_members.csv.sig
+data/safe_circle_updates.csv
+data/safe_circle_updates.csv.sig
+data/audit.log
