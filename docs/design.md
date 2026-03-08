@@ -65,6 +65,7 @@ The prototype is a Java CLI by design.
   - digest switches to deterministic rule summary,
   - confidence remains rule-derived,
   - categorization falls back to keyword/rule classification.
+  - contradiction gate is skipped when AI score is unavailable (system falls back to standard threshold review logic).
 
 ### Why Rule-First for Trust Scoring
 - Predictable behavior for reviewers.
@@ -75,6 +76,7 @@ The prototype is a Java CLI by design.
 ## Noise-to-Signal Strategy
 - Confidence score combines source type, verification, details quality, severity weighting, and validated corroboration.
 - Low-confidence unverified incidents are routed to review queue.
+- Contradiction gate: high-trust claims (`verified=true` or trusted source types) with low AI confidence are force-routed to review.
 - Cluster collapse reduces repeated feed entries.
 - Scope labels communicate certainty:
   - `widespread`,
@@ -101,6 +103,7 @@ The prototype is a Java CLI by design.
 - Account lockout after repeated failed logins.
 - Role-based menus (`user`, `reviewer`).
 - Circle ownership and delegated member-management permissions.
+- Trust-elevation control: contradiction gate mitigates false trust inflation from user-claimed verification/source fields.
 
 ### Auditability
 - Authentication, account, incident, and circle actions are logged to `audit.log`.

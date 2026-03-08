@@ -62,6 +62,7 @@ plus integration tests for end-to-end CLI behavior.
 Security note: `data/users.csv` is stored encrypted at rest (AES-GCM envelope).
 Password note: user passwords are salted and hashed with `PBKDF2-HMAC-SHA256` (legacy salted SHA-256 hashes are auto-upgraded on successful login).
 Data privacy note: incident `location` is encrypted at field level at rest and decrypted in-memory using `INCIDENT_DATA_KEY`.
+Trust-safety note: contradiction gate can force `needsReview=true` when high-trust user claims conflict with low AI confidence.
 
 ## AI Disclosure
 - Did you use an AI assistant (Copilot, ChatGPT, etc.)? Yes
@@ -111,7 +112,7 @@ Data privacy note: incident `location` is encrypted at field level at rest and d
 
 ## Requirement Coverage
 1. Core flow: create + list/search/filter + update + digest (+ signal feed/cluster views).
-2. AI + fallback: OpenAI digest + deterministic fallback; optional AI confidence adjustment and optional `category=auto` categorization, both with rule fallback.
+2. AI + fallback: OpenAI digest + deterministic fallback; optional AI confidence adjustment and optional `category=auto` categorization, both with rule fallback; contradiction gate can force review on low-AI/high-trust conflicts.
 3. Basic quality: validation, clear errors, and service-level + integration tests (happy path + multiple edge cases).
 4. Data safety: synthetic sample CSV included (`data/sample_incidents.csv`).
 5. Security: no committed keys; `.env.example` provided and `.env` ignored.
@@ -129,3 +130,4 @@ Data privacy note: incident `location` is encrypted at field level at rest and d
   - `demo_user / UserDemo@1234`
   - `demo_reviewer / ReviewDemo@1234`
 - Set security keys in `.env` (required): `USERS_DB_KEY`, `INCIDENT_DATA_KEY`, `DATA_INTEGRITY_KEY`.
+- Optional trust controls in `.env`: `CONFIDENCE_REVIEW_THRESHOLD`, `AI_CONTRADICTION_GATE_ENABLED`, `AI_CONTRADICTION_LOW_THRESHOLD`.
