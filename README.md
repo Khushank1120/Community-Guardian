@@ -2,7 +2,7 @@
 
 Candidate Name: Khushank  
 Scenario Chosen: Community Safety & Digital Wellness  
-Estimated Time Spent: ~7 hours  
+Estimated Time Spent: 4-6 hours  
 
 ## Quick Start
 
