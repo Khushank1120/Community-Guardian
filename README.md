@@ -1,6 +1,6 @@
 # Community Guardian (Java CLI)
 
-Candidate Name: Khushank  
+Candidate Name: Khushank Mistry
 Scenario Chosen: Community Safety & Digital Wellness  
 Estimated Time Spent: 4-6 hours  
 
@@ -32,10 +32,10 @@ java -cp out com.communityguardian.cli.CommunityGuardianApp start --db data/inci
 
 ### App Flow (Terminal)
 - Launch app with `start`.
-- Login as demo accounts or sign up a new user with default location.
+- Login as demo accounts or sign up a new user with the default location.
 - `user` flow:
-- Create incident report.
-- View signal feed with filters.
+- Create an incident report.
+- View the signal feed with filters.
 - Generate digest (defaults to user location if blank; use `ALL` for all locations).
 - Open circle settings to create circle and manage members.
 - Share and view safe-circle updates.
@@ -65,7 +65,7 @@ Data privacy note: incident `location` is encrypted at field level at rest and d
 Trust-safety note: contradiction gate can force `needsReview=true` when high-trust user claims conflict with low AI confidence.
 
 ## AI Disclosure
-- Did you use an AI assistant (Copilot, ChatGPT, etc.)? Yes
+- Did you use an AI assistant (Copilot, ChatGPT, etc.)? Yes - gpt-4.1-mini, gpt-5.3-codex and claude-opus-4.6 (mainly to compare different implementation ideas and perspectives while designing the solution)
 - How did you verify the suggestions?
   - Compiled after each change.
   - Ran CLI smoke flows (`init-db`, `create`, `list`, `update`, `digest`).
@@ -100,19 +100,20 @@ Trust-safety note: contradiction gate can force `needsReview=true` when high-tru
   - Immutable audit exports, security dashboarding, and broader observability (logs/metrics/traces/alerts).
   - REST API layer so web/mobile clients can integrate with the same backend logic.
 - Known limitations:
-  - CSV is not concurrency-safe and is vulnerable to operational issues under parallel writes.
-  - Current clustering is string/key based, so semantically similar incidents may split into separate clusters.
+  - User account lifecycle is basic in V1: limited profile settings, no forgot-password/reset flow, and no self-serve account deletion. 
   - AI response parsing is lightweight string extraction; robust schema validation is deferred.
+  - CSV is not concurrency-safe and is vulnerable to operational issues under parallel writes.
+  - Current clustering is string/key-based, so semantically similar incidents may split into separate clusters.
   - Confidence scoring is heuristic and needs calibration against labeled real-world incident data.
   - Safe-circle encryption uses a shared passphrase model; production systems should use per-member cryptographic controls.
-  - Runtime security depends on correct key loading in environment; missing keys cause hard failures by design.
+  - Runtime security depends on correct key loading in the environment; missing keys cause hard failures by design.
 
 ## Demo Video
-- My 5-7 minute video link (YouTube): `<PASTE_LINK_HERE>`
+- My 5–7 minute video link (YouTube): `https://youtu.be/P1wDjkkaBbw`
 
 ## Requirement Coverage
 1. Core flow: create + list/search/filter + update + digest (+ signal feed/cluster views).
-2. AI + fallback: OpenAI digest + deterministic fallback; optional AI confidence adjustment and optional `category=auto` categorization, both with rule fallback; contradiction gate can force review on low-AI/high-trust conflicts.
+2. AI plus fallback: OpenAI digest + deterministic fallback; optional AI confidence adjustment and optional `category=auto` categorization, both with rule fallback; contradiction gate can force review on low-AI/high-trust conflicts.
 3. Basic quality: validation, clear errors, and service-level + integration tests (happy path + multiple edge cases).
 4. Data safety: synthetic sample CSV included (`data/sample_incidents.csv`).
 5. Security: no committed keys; `.env.example` provided and `.env` ignored.
@@ -122,10 +123,10 @@ Trust-safety note: contradiction gate can force `needsReview=true` when high-tru
   - `user`: create/view incidents, digest, checklist, safe-circle updates
   - `reviewer`: review queue, verify/update incidents, clusters, prune expired
 - During signup, each account stores a default location.
-- In terminal digest flow:
-  - blank location input => uses user's default location,
+- In the terminal digest flow:
+  - blank location input ⇒ uses user's default location,
   - `ALL` => includes all locations,
-  - any other value => uses that specific location.
+  - any other value ⇒ uses that specific location.
 - On first `start`, default demo accounts are auto-created in `data/users.csv` (encrypted at rest):
   - `demo_user / UserDemo@1234`
   - `demo_reviewer / ReviewDemo@1234`
