@@ -12,6 +12,7 @@ import java.util.Locale;
 
 public class ConfidenceService {
     private static final double DEFAULT_REVIEW_THRESHOLD = 0.60;
+    private static final double DEFAULT_CONTRADICTION_LOW_AI_THRESHOLD = 0.30;
 
     public static double computeRuleScore(Incident in) {
         double base = switch (in.sourceType) {
@@ -35,30 +36,73 @@ public class ConfidenceService {
     }
 
     public static double maybeAdjustWithAI(Incident in, double ruleScore, boolean aiAdjust) {
-        if (!aiAdjust) {
-            return ruleScore;
-        }
-
-        try {
-            Double aiScore = scoreWithOpenAI(in);
-            if (aiScore == null) {
-                return ruleScore;
-            }
-            return clamp((0.7 * ruleScore) + (0.3 * aiScore), 0.05, 0.99);
-        } catch (Exception ex) {
-            if ("true".equalsIgnoreCase(System.getenv().getOrDefault("AI_DEBUG", "false"))) {
-                System.err.println("AI confidence adjustment skipped: " + ex.getMessage());
-            }
-            return ruleScore;
-        }
+        Double aiScore = tryAiScore(in, aiAdjust);
+        return mergeRuleAndAi(ruleScore, aiScore);
     }
 
     public static boolean shouldFlagForReview(Incident in) {
+        return shouldFlagForReview(in, null);
+    }
+
+    public static boolean shouldFlagForReview(Incident in, Double aiScore) {
+        if (isContradictionGateTriggered(in, aiScore)) {
+            return true;
+        }
         if (in.verified) {
             return false;
         }
         double threshold = parseDoubleOrDefault(System.getenv("CONFIDENCE_REVIEW_THRESHOLD"), DEFAULT_REVIEW_THRESHOLD);
         return in.confidenceScore < threshold;
+    }
+
+    public static Double tryAiScore(Incident in, boolean aiAdjust) {
+        if (!aiAdjust) {
+            return null;
+        }
+        Double override = parseDoubleOrNull(System.getProperty("ai.confidence.override"));
+        if (override == null) {
+            override = parseDoubleOrNull(System.getenv("AI_CONFIDENCE_OVERRIDE"));
+        }
+        if (override != null) {
+            return clamp(override, 0.0, 1.0);
+        }
+
+        try {
+            return scoreWithOpenAI(in);
+        } catch (Exception ex) {
+            if ("true".equalsIgnoreCase(System.getenv().getOrDefault("AI_DEBUG", "false"))) {
+                System.err.println("AI confidence adjustment skipped: " + ex.getMessage());
+            }
+            return null;
+        }
+    }
+
+    public static double mergeRuleAndAi(double ruleScore, Double aiScore) {
+        if (aiScore == null) {
+            return ruleScore;
+        }
+        return clamp((0.7 * ruleScore) + (0.3 * aiScore), 0.05, 0.99);
+    }
+
+    public static boolean isContradictionGateTriggered(Incident in, Double aiScore) {
+        if (aiScore == null) {
+            return false;
+        }
+        if (!parseBooleanOrDefault(System.getenv("AI_CONTRADICTION_GATE_ENABLED"), true)) {
+            return false;
+        }
+        if (!isHighTrustClaim(in)) {
+            return false;
+        }
+        double lowAiThreshold = parseDoubleOrDefault(System.getenv("AI_CONTRADICTION_LOW_THRESHOLD"), DEFAULT_CONTRADICTION_LOW_AI_THRESHOLD);
+        return aiScore < lowAiThreshold;
+    }
+
+    private static boolean isHighTrustClaim(Incident in) {
+        if (in.verified) {
+            return true;
+        }
+        return "official".equals(in.sourceType) || "news".equals(in.sourceType) || "sensor".equals(in.sourceType);
     }
 
     private static Double scoreWithOpenAI(Incident in) throws IOException, InterruptedException {
@@ -182,5 +226,29 @@ public class ConfidenceService {
         } catch (NumberFormatException ex) {
             return fallback;
         }
+    }
+
+    private static Double parseDoubleOrNull(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(raw);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private static boolean parseBooleanOrDefault(String raw, boolean fallback) {
+        if (raw == null || raw.isBlank()) {
+            return fallback;
+        }
+        if ("true".equalsIgnoreCase(raw)) {
+            return true;
+        }
+        if ("false".equalsIgnoreCase(raw)) {
+            return false;
+        }
+        return fallback;
     }
 }

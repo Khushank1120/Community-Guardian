@@ -147,12 +147,15 @@ public class IncidentRepository {
         in.corroborationCount = computeValidatedCorroboration(incidents, in);
 
         double rule = ConfidenceService.computeRuleScore(in);
-        in.confidenceScore = ConfidenceService.maybeAdjustWithAI(in, rule, aiAdjust);
-        in.needsReview = ConfidenceService.shouldFlagForReview(in);
+        Double aiScore = ConfidenceService.tryAiScore(in, aiAdjust);
+        in.confidenceScore = ConfidenceService.mergeRuleAndAi(rule, aiScore);
+        boolean contradictionGate = ConfidenceService.isContradictionGateTriggered(in, aiScore);
+        in.needsReview = ConfidenceService.shouldFlagForReview(in, aiScore);
 
         incidents.add(in);
         save(dbPath, incidents);
-        AuditService.log("incident.create", "system", in.id, "success", "category=" + in.category + ",severity=" + in.severity);
+        String meta = "category=" + in.category + ",severity=" + in.severity + ",contradictionGate=" + contradictionGate;
+        AuditService.log("incident.create", "system", in.id, "success", meta);
         return in;
     }
 

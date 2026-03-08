@@ -27,6 +27,7 @@ public class CommunityGuardianTests {
         testHappyPathCreateFilterAndDigestFallback();
         testEdgeCaseInvalidDetailsRejected();
         testLowConfidenceGoesToNeedsReview();
+        testContradictionGateForcesReviewOnHighTrustClaim();
         testExpiredIncidentsExcludedByDefault();
         testUpdateRecomputesConfidenceAndClearsReviewWhenVerified();
         testClusterCollapseReducesDuplicateNoise();
@@ -154,6 +155,39 @@ public class CommunityGuardianTests {
             List<Incident> withExpired = IncidentRepository.list(tmp, includeExpired);
             assertTrue(withExpired.stream().anyMatch(i -> i.id.equals(first.id)), "expired incident should be visible when requested");
         } finally {
+            Files.deleteIfExists(tmp);
+        }
+    }
+
+    static void testContradictionGateForcesReviewOnHighTrustClaim() throws IOException {
+        Path tmp = Files.createTempFile("guardian", ".csv");
+        String prevOverride = System.getProperty("ai.confidence.override");
+        try {
+            System.setProperty("ai.confidence.override", "0.05");
+            IncidentRepository.initDb(Path.of("data", "sample_incidents.csv"), tmp);
+
+            Incident created = IncidentRepository.create(
+                tmp,
+                "Claimed official alert with suspicious content",
+                "auto",
+                "high",
+                "Brooklyn",
+                "Reported from unknown context but marked as official and verified by submitter.",
+                true,
+                "official",
+                5,
+                14,
+                true
+            );
+
+            assertTrue(created.verified, "incident should be verified as submitted");
+            assertTrue(created.needsReview, "contradiction gate should force review");
+        } finally {
+            if (prevOverride == null) {
+                System.clearProperty("ai.confidence.override");
+            } else {
+                System.setProperty("ai.confidence.override", prevOverride);
+            }
             Files.deleteIfExists(tmp);
         }
     }
