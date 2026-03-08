@@ -66,10 +66,11 @@ The prototype is a Java CLI by design.
   - confidence remains rule-derived,
   - categorization falls back to keyword/rule classification.
 
-### Why Rule-First
+### Why Rule-First for Trust Scoring
 - Predictable behavior for reviewers.
 - Safer failure modes under outage/quota pressure.
 - Better explainability for an assessment context.
+- Note: digest summarization and `category=auto` still attempt AI first, then fall back to rules when needed.
 
 ## Noise-to-Signal Strategy
 - Confidence score combines source type, verification, details quality, severity weighting, and validated corroboration.
