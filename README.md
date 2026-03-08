@@ -1,8 +1,8 @@
 # Community Guardian (Java CLI)
 
-Candidate Name: Khushank Mistry
-Scenario Chosen: Community Safety & Digital Wellness  
-Estimated Time Spent: 4-6 hours  
+- Candidate Name: Khushank Mistry
+- Scenario Chosen: Community Safety & Digital Wellness  
+- Estimated Time Spent: 4-6 hours  
 
 ## Quick Start
 
